@@ -1,0 +1,223 @@
+************************* TestNG ***********************************************************************************
+
+1] Tags
+
+	a) Annotation
+		1) @Test 
+		2) @BeforeTest
+		3) @AfterTest
+		4) @BeforeSuite
+		5) @AfterSuite
+		6) @BeforeMethod
+		7) @AfterMethod 
+		8) @BeforeClass
+		9) @AfterClass
+
+	
+2] Testng xml hierarchy
+		Test Suite -> Test folder -> Test Cases
+
+
+3] Exclude a method from running
+
+	a) using full method name
+	<test name="Car loan">
+		<classes>
+			<class name="test.Login">
+				<methods>
+				<exclude name="MobileLoginCar"></exclude> 
+				</methods>
+				
+			</class>
+		</classes>
+	</test>
+
+	b) using regex for method name
+		<test name="Car loan">
+			<classes>
+				<class name="test.Login">
+					<methods>
+					<exclude name="Mobile.*"></exclude> <!-- Exclude a test using regex -->
+					</methods>	
+			</class>
+		</classes>
+	</test>
+
+4] Run all test cases in a package
+
+	<suite name="Loan Department">
+	<test thread-count="5" name="Personal Loan">
+			<packages>
+				<package name="test"></package>
+			</packages>
+
+	</test>
+	
+</suite> 
+
+
+5] Grouping test methods from different classes using tags
+
+
+		a) Testng xml  
+
+			<suite name="Groups and Tags Test ">
+				<test name="Smoke Testing">
+		<groups>
+			<run>
+				<include name="smoke"></include>
+			</run>
+		</groups>
+		<classes>
+			<class name="test.OneTest" />
+			<class name="test.TwoTests" />
+			<class name="test.Login" />
+			<class name="test.Login2" />
+		</classes>
+	Note : use this to exclude a tag from running <exclude name="smoke"></exclude>
+
+		b) Class file
+			
+		@Test(groups= {"smoke"})
+		public void Second() {
+			System.out.println("Second Test");
+
+			}
+
+6] A test method depending on another method execution 
+
+	@Test
+	public void MobileLoginCar() {
+		System.out.println("Appium MobileLogin car loan");
+		
+	}
+	
+	@Test(dependsOnMethods = {"MobileLoginCar"})
+	public void MobileLogOutCar() {
+		System.out.println("Appium Mobile LogOut car loan");
+		
+	}
+
+7] Disable a test method from running
+	@Test(enabled=false)
+	public void First() {
+		System.out.println("First Test");
+
+	}
+
+8] wait time for method to complete before failing
+
+	@Test(timeOut = 4000)   # wait for 4sec before failing this test method
+	public void MobileLoginCar() {
+		System.out.println("Appium MobileLogin car loan");
+		
+	}
+
+9] Creating a global/suite level parameter to be called in the test methods
+
+	a) declare in the testng.xml file
+		<suite name="Loan Department">
+		<parameter name="URL" value="qaclickacademy.com"></parameter>
+
+	b) call the parameter in the test method
+			@Parameters({"URL"})
+			@Test(groups= {"smoke"})
+			public void WebLoginCar(String urlname) {
+				System.out.println("Selenium WebLogin car loan ="+ urlname );
+		
+		}	
+
+
+10] Test method level parameter 
+
+		a) declare in testng.xml
+	
+	<suite name="Loan Department">
+	<parameter name="URL" value="qaclickacademy.com"></parameter> <!-- suite level paramater -->
+	<test thread-count="5" name="Personal Loan">
+		<parameter name="API" value="KEY#123"></parameter>  <!-- test level paramater -->
+		<classes>
+			<class name="test.OneTest" />
+			<class name="test.TwoTests" />
+			<class name="test.Login2">
+		
+		b) Calling in test method
+
+		@Parameters({"API"})
+		@Test(groups= {"smoke"})
+		public void demo(String apiValue) {
+			System.out.println("Checking for TestNg using API key = "+apiValue);
+
+			}
+	
+11] Using DataProvider to pass multiple values
+
+	a) Method which passes the values
+
+	@DataProvider
+	public Object[][] getData() {
+		Object[][]data = new Object[3][2];
+		data[0][0]="username1";
+		data[0][1]="password1";
+		
+		data[1][0]="username2";
+		data[1][1]="password2";
+		
+		data[2][0]="username3";
+		data[2][1]="password3";
+		
+		return data;
+				
+		
+	}
+
+
+	b) Method which call the values
+
+	@Test(dataProvider="getData")
+	public void APILoginCar(String name,String pwd) {
+		System.out.println("Postman APILogin car loan");
+		System.out.println(name+" & "+ pwd);
+		
+	}
+
+
+	c) Passing HashMap<Object,Object> as DataProvider
+	
+			Defining the dataProvider
+				@DataProvider
+				public Object[][] getData() {
+					HashMap<String,String> map = new HashMap();
+						map.put("username", "gpradeep.srs@gmail.com");
+						map.put("password", "Paddi_1984");
+						map.put("productName", "ZARA COAT 3");
+					
+					HashMap<String,String> map1 = new HashMap();
+						map1.put("username", "anshika@gmail.com");
+						map1.put("password", "Iamking@000");
+						map1.put("productName", "ADDIDAS ORIGINAL");
+		
+				return new Object[][] {{map},{map1}};
+		
+							
+							
+			Receiving the HashMap
+					@Test(dataProvider = "getData",groups= {"Purchase"})
+					public void submitOrder(HashMap<String,String> input ) throws IOException,InterruptedException {
+					ProductCatalogue pc =lp.loginToApplication( input.get("username"), input.get("password"));	
+					List<WebElement> products = pc.getProductList();
+					pc.addProductToCart(input.get("productName"));	
+				}
+ 
+13]  To run tests in parallel at the suite level
+
+		<suite name="Loan Department" parallel="tests" thread-count="5">
+
+
+14] to run the methods irrespective of tag/group set
+
+	@AfterMethod(alwaysRun = true)
+	public void tearDown() {
+		System.out.println("Closing browser ="+browserName);
+		driver.close();
+	}

@@ -1,0 +1,403 @@
+1] Page Object Model/Classes
+
+2] Page Factory
+
+	a) Import the libraries
+		import org.openqa.selenium.support.FindBy;
+		import org.openqa.selenium.support.PageFactory;
+	
+	b) Create constructor
+		public class LandingPage {
+			WebDriver driver;
+			
+			public LandingPage(WebDriver driver) {
+				this.driver=driver;
+				PageFactory.initElements(driver, this);
+		
+			}
+
+	c) Create webelements using the pagefactory 
+
+		//WebElement userEmail = driver.findElement(By.id("userEmail")).sendKeys(username);
+		@FindBy(id="userEmail")
+		WebElement userEmail;
+	
+		//WebElement userPassword = driver.findElement(By.id("userPassword")).sendKeys(password);
+		@FindBy(id="userPassword")
+		WebElement password;
+
+
+3] Creating properties file
+
+		1) Create a properties file e.g GlobalData.properties with key values
+			e.g browser = chrome
+		2) Call the properties files in the basetest file where all global data is initialized. Read/load the property using FileInputstream
+			
+				import java.util.Properties;
+				import java.io.FileInputStream;
+		
+				Properties prop = new Properties();
+				String path = System.getProperty("user.dir") + "\\src\\main\\java\\pgodi\\resources\\GlobalData.properties";
+				System.out.println(path);
+				FileInputStream fis = new FileInputStream(path);
+		
+				prop.load(fis);
+				String browserName = prop.getProperty("browser");
+
+
+4] Method to read json data as HashMap List
+		import java.util.HashMap;
+		import java.util.List;
+		
+		
+		Add this dependency in the pom.xml to read json file
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.17.1</version>
+		</dependency>
+
+
+
+	a) Method that reads the json data	from the given file path
+
+	public List<HashMap<String, String>> getJsonDataToMap(String jsonFilePath) throws IOException {
+		
+//		String path = System.getProperty("user.dir") + "\\src\\test\\java\\pgodi\\data\\PurchaseOrder.json";
+//		System.out.println(path);
+		String jsonContent = FileUtils.readFileToString(new File (jsonFilePath),StandardCharsets.UTF_8);
+		
+		//String to HashMap using Jackson databind
+		ObjectMapper mapper = new ObjectMapper();		
+		List<HashMap<String,String>>data= mapper.readValue(jsonContent, new TypeReference<List<HashMap<String,String>>>(){;
+		});
+		return data;
+	}
+	
+	b) 		json file containing data
+	
+			[
+			{ "username": "gpradeep.srs@gmail.com",
+			"password": "Paddi_1984",
+				"productName": "ZARA COAT 3"
+
+				},
+				{
+				"username": "anshika@gmail.com",
+				"password": "Iamking@000",
+				"productName": "ADDIDAS ORIGINAL"
+
+				}
+				]
+	c) Method that calls a method that fetches json data from a file
+	
+				@DataProvider
+				public Object[][] getData() throws IOException {
+				
+				String path = System.getProperty("user.dir") + "\\src\\test\\java\\pgodi\\data\\PurchaseOrder.json";
+				System.out.println(path);
+				List<HashMap<String, String>> data= getJsonDataToMap(path);
+				return new Object[] [] {{data.get(0)} , {data.get(1)}};
+				
+			}
+			
+			
+5] Take screen shot 
+
+	import java.io.File;
+	import java.io.IOException;	
+	import org.openqa.selenium.TakesScreenshot;
+	import org.openqa.selenium.OutputType;
+	import org.apache.commons.io.FileUtils;
+
+	public String  getScreenShot(String testCaseName) throws IOException {
+		
+		TakesScreenshot ts = (TakesScreenshot)driver;
+		File  source = ts.getScreenshotAs(OutputType.FILE);
+		String path = System.getProperty("user.dir") + "\\reports\\" + testCaseName + ".png";
+		File dest = new File(path);	
+		FileUtils.copyFile(source, dest );
+		return path;
+		
+	}		
+
+
+6] Creating extent report to be attached in the html report	
+		import com.aventstack.extentreports.ExtentReports;
+		import com.aventstack.extentreports.ExtentTest;
+		import com.aventstack.extentreports.reporter.ExtentSparkReporter;
+	
+	a) define the extent report configuration
+public class ExtentReportsDemo {
+	ExtentReports extent ;	
+	@BeforeTest
+	public void config() {
+		//ExtentReports , ExtentSparkReporter are 2 important classes to generate extent reports
+		// ExtentSparkReporter helps in configuring the report format/template
+		// ExtentReports  actually generates and attaches the html reports
+		
+		String path = System.getProperty("user.dir") + "\\reports\\index.html";	
+		ExtentSparkReporter reporter = new ExtentSparkReporter(path);
+		reporter.config().setReportName("Web Automation Results");
+		reporter.config().setDocumentTitle("Automation Test Results");
+		
+		extent = new ExtentReports();
+		extent.attachReporter(reporter);
+		extent.setSystemInfo("Tester", "pgodi");
+		
+		
+	}
+
+	b) Call the extent reporter
+	
+	@Test
+	public void initialDemo() {
+		ExtentTest test= extent.createTest("Initial Demo");	System.setProperty("webdriver.gecko.driver","E:\\selenium\\Installers\\drivers\\geckodriver-v0.33.0-win64\\geckodriver.exe" );
+		WebDriver driver = new FirefoxDriver();
+		driver.get("https://rahulshettyacademy.com/");
+		System.out.println(driver.getTitle());
+		extent.flush();
+		//Assert.assertTrue(false);
+		//test.fail("Results do not match"); // to fail the test deliberately
+		driver.close();
+		
+	}
+	
+	
+7] Listeners on Failure to capture screenshot and test case name
+		a) In testng.xml provide the Listeners class file path
+				<suite name="Suite" parallel="tests">
+				<listeners>
+					<listener class-name="pgodi.TestComponents.Listeners"></listener>
+				</listeners>
+	
+		b) In the Listener class file define all paramaters to be captured
+		
+		public class Listeners extends BaseTest implements ITestListener{
+
+				ExtentReports extent = ExtentReporterNG.getReportObject();
+				ExtentTest test;
+				ThreadLocal<ExtentTest> extentTest = new ThreadLocal(); // to avoid one test overwriting another test
+
+			@Override
+			public void onTestFailure(ITestResult result) {
+				
+				test.fail(result.getThrowable());
+				// this code block will give life to the driver
+				try {
+					driver = (WebDriver) result.getTestClass().getRealClass().getField("driver").get(result.getInstance());
+				} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				//take screenshot when test fails
+				
+				test.log(Status.FAIL, "Test Failed");
+				String testCaseName = result.getTestName();
+				String screenShotPath = null;
+				try {
+					screenShotPath = getScreenShot(testCaseName,driver); //pass the webdriver from listener to basetest class
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				test.addScreenCaptureFromPath(screenShotPath, testCaseName);
+				
+			}
+	c)in the Listeners flush the extent obeject so that html report is generated
+					
+					@Override
+					public void onFinish(ITestContext context) {
+						// TODO Auto-generated method stub
+						ITestListener.super.onFinish(context);
+						extent.flush();
+					}
+
+
+
+	@Override
+	public void onTestFailure(ITestResult result) {
+		// TODO Auto-generated method stub
+		System.out.println("Test failed msg from ITestListner = "+result.getName());
+	}
+
+
+
+
+
+	
+	
+	
+7] Re-run the failed tests using IRetryAnalyzer
+		a) create a class 
+						import org.testng.IRetryAnalyzer;
+						import org.testng.ITestResult;
+
+						public class Retry implements IRetryAnalyzer{
+							
+							int count = 0;
+							int maxTry = 1;
+
+							@Override
+							public boolean retry(ITestResult result) {
+								// TODO Auto-generated method stub
+								
+								if(count < maxTry) {
+									count++;
+									return true;
+								}
+								
+								return false;
+							}
+
+						}
+		b) call the retry class on the test method which might fail
+		public class ErrorValidation extends BaseTest{
+
+				@Test(groups= {"ErrorHandling"},retryAnalyzer=Retry.class)
+				public void LoginErrorValidation() throws IOException, InterruptedException {
+				
+				
+8] Running the tests using Maven commands		
+			a) download and Install maven from internet. set PATH in env variables
+			b) add maven plugin and define the profile/testng.xml in the pom.xml file which contains testsuite
+
+				<profiles>
+					<profile>
+						<id>Regression</id>
+						<build>
+							<pluginManagement><!-- lock down plugins versions to avoid using
+						Maven defaults (may be moved to parent pom) -->
+								<plugins>
+
+									<plugin>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-surefire-plugin</artifactId>
+										<version>2.21.0</version>
+										<configuration>
+											<suiteXmlFiles>
+												<suiteXmlFile>testSuites/testng.xml</suiteXmlFile>
+											</suiteXmlFiles>
+										</configuration>
+									</plugin>
+								</plugins>
+							</pluginManagement>
+						</build>
+					</profile>
+
+				 c)  Execute the command from cmd by giving the profile name
+						mvn test -P Regression   (-P = Profile, Regression= Profile name as set in the pom.xml)
+						
+				d) to read the browser value from maven command line 
+				cmd :	mvn test -P Regression -D browser=firefox    [-D is the data passed from cmd line to code and caught in System.getProperty("browser") ]
+
+				code :
+				browserName =System.getProperty("browser")!=null ? System.getProperty("browser") : prop.getProperty("browser");
+
+9] Jenkins
+		a) Download and install jenkins from internet
+		b) Start jenkins server using the below cmd	and verify that server has started
+				 java -jar jenkins.war -httpPort=9090
+						
+		c) Create a job and provide the path where project code is present
+		d) create choice paramaters for browser selection e.g browserName under "This project is parameterized"
+		e) under "Build Steps" -> "Invoke top-level Maven targets" give the below cmd to start exectuion 
+			test -P Regression -D browser="$browserName"
+
+10] To execute the test in Headless mode	
+		
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("headless");
+		driver = new ChromeDriver(options);
+		
+11] Access modifier
+	default :  access the methods,variables anywhere within the package and not outside the package
+	public : access the methods,variables anywhere inside and outside package
+	private : cannot access the methods,variables anywhere outside the Class, but only inside the class itself
+	protected : methods and variable marked as protected can be accessed by the child class that extends/inherit the parent class within or outside package that contains the protected variables and methods
+	
+		
+12] Java Collections frame work
+			A) List	Interface is an ordered collection, may contain duplicate elements
+				a) ArrayList : Class that implements List. Arrays has fixed size , arrayList can grow dynamically.elements can be accssed and inserted using index
+							import java.util.ArrayList;
+							ArrayList<Integer> ai = new ArrayList<Integer>();
+							ArrayList<String> as = new ArrayList<String>();
+									ai.add(4);
+									ai.add(100);
+									as.add("HI");
+									as.add("Hello");
+									as.indexOf("HI")
+				
+				b) LinkedList : Class that implements List
+				c) Vector : Class that implements List
+				
+			B)Set Interface--> Does nto include duplicate values. The below implements Set interface. Elements are not stored in order or sequence
+				a) HashSet  --> 
+									import java.util.HashSet;
+
+									HashSet<String> hs = new HashSet<String>();
+									hs.add("PGodi");
+									hs.add("Pradeep");
+									hs.add("PGodi");
+									System.out.println(hs);
+									
+									output :
+									[PGodi, Pradeep]
+
+				b) TreeSet
+				c) LinkedHasset
+				
+				d) Iterator on set
+						import java.util.Iterator;
+						Iterator<String> itr = hs.iterator();
+						itr.next();
+						itr.hasNext();
+						while(itr.hasNext()) {
+							System.out.println(itr.next());
+						}
+						
+						
+								Set<Entry<Integer, String>> s= h.entrySet();
+								Iterator<Entry<Integer, String>> it= s.iterator();
+							
+								while (it.hasNext()) {
+									Map.Entry mp = (Map.Entry)it.next();
+									System.out.println(mp.getKey() +" : "+mp.getValue());
+								}
+									
+								Output:
+										0 : zero
+										1 : One
+										2 : two								
+														
+
+			C) Map Interface:  Stores values in key:value 
+				a)HasMap is not synchronized and not thread safe whereas HashTable is threadsafe and synchronized
+				b) HashMap allows null value,whereas null is not allowed in HashTable
+				c) HashMap uses iterator whereas HashTable uses vecotor for iterating
+				
+13] Data Driven Testing
+				Use Apache POI API to connecte excel file and Java code	
+				a) Get the this maven in the pom.xml
+							<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+								<dependency>
+									<groupId>org.apache.poi</groupId>
+									<artifactId>poi-ooxml</artifactId>
+									<version>5.2.5</version>
+								</dependency>
+								
+				b) Import these libraries	
+					import java.io.FileInputStream;
+					import java.io.IOException;
+					import org.apache.poi.xssf.usermodel.XSSFSheet;
+					import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+					
+				//point the location where file is present	
+				FileInputStream fis = new FileInputStream("E:\\myworkspace_selenium\\framework\\ExcelData.xlsx");
+				XSSFWorkbook xl  = new XSSFWorkbook(fis); // access the file 
+				int sheetCount = xl.getNumberOfSheets();
+				xl.getSheetName(i); //get sheet name at i'th index
+				
+				XSSFSheet  sheet = xl.getSheetAt(i)  // Get access to the particular sheet

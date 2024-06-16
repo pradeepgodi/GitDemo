@@ -1,0 +1,483 @@
+1] Constructing a CSS Selector
+
+
+a) When id attribute is available 
+	html element =>   <input type="text" placeholder="Username" id="inputUsername" value="">
+	Format => tagname#idValue     ( tagname is optional so #id is also a valid provided that id is unique on the html page)
+	CSS =>  input#inputUsername
+
+b) When class attribute is available
+	html element =>  <button class="submit signInBtn" type="submit">Sign In</button>
+	Format => tagname.classValue
+	CSS =>    button.signInBtn 
+
+c) When classname and id are not available
+	html element =>   <input type="text" placeholder="Username" value="">
+	Format =>         tagname[attribute='value']
+	CSS =>	   input[placeholder='Username' ]
+
+d) when there are repeating attributes
+	multiple html elements with same attributes=>
+		<input type="text" placeholder="Phone Number">
+		<input type="text" placeholder="Name"> 
+		<input type="text" placeholder="Email"> 
+	Format => tagname[attribute='value']:nth-child(2)
+
+e) Parent to child 
+	html element => form is a parent , h2,input are childrens inside the form parent
+	<form action="#">
+		<h2 xpath="1">Forgot password</h2>
+		<input type="text" placeholder="Phone Number">
+		<input type="text" placeholder="Name">
+		<input type="text" placeholder="Email"><br>
+		</form>
+
+	Format => parent-tag child-tag
+	CSS => form input
+
+f) Regular expression
+	html element =>   <input type="text" placeholder="Username" value="">
+	Format =>         tagname[attribute*='partial-value']
+	CSS =>	   input[placeholder*='User']   ( * indicates the regular expression)
+
+
+
+2] Constructing a Xpath Selector
+a) When element can be identified uniquely
+	html element =>   <input type="text" placeholder="Name"> 
+	Format =>  //tagname[@attribute='value']
+	xpath => //input[@placeholder='Name']
+
+b) when there are repeating attributes
+	multiple html elements with same attributes=>
+		<input type="text" placeholder="Phone Number">
+		<input type="text" placeholder="Name"> 
+		<input type="text" placeholder="Email"> 
+	Format =>  //tagname[@attribute='value'][index_value]
+	xpath => //input[@type='text'][1]
+
+c) Parent to child 
+	html element => form is a parent , h2,input are childrens inside the form parent
+	<form action="#">
+		<h2 xpath="1">Forgot password</h2>
+		<input type="text" placeholder="Phone Number">
+		<input type="text" placeholder="Name">
+		<input type="text" placeholder="Email"><br>
+		</form>
+	Format => //parent-tag/child-tag
+	xpath => //form/h2 ( this will locate forgot password)
+	xpath =>  //form/input[1] ( this will locate the Phone number )
+	
+d) Regular expression
+
+	html element =>  <button class="submit signInBtn" type="submit">Sign In</button>
+	Format => //tagname[function(@attribute,'value')]
+	CSS =>    //button[contains(@class,'submit')]
+
+
+driver.findElement(By.id("inputUsername")).sendKeys("rahul");
+driver.findElement(By.name("inputPassword")).sendKeys("hello123");
+driver.findElement(By.className("signInBtn")).click();
+System.out.println(driver.findElement(By.cssSelector("p.error")).getText());
+driver.findElement(By.linkText("Forgot your password?")).click();
+driver.findElement(By.xpath("//input[@placeholder='Name']")).sendKeys("John");
+driver.findElement(By.cssSelector("input[placeholder='Email']")).sendKeys("john@rsa.com");
+driver.findElement(By.xpath("//input[@type='text'][2]")).clear();
+driver.findElement(By.cssSelector("input[type='text']:nth-child(3)")).sendKeys("john@gmail.com");
+driver.findElement(By.xpath("//form/input[3]")).sendKeys("9864353253");
+driver.findElement(By.cssSelector(".reset-pwd-btn")).click();
+System.out.println(driver.findElement(By.cssSelector("form p")).getText());
+driver.findElement(By.xpath("//div[@class='forgot-pwd-btn-conainer']/button[1]")).click();
+driver.findElement(By.cssSelector("#inputUsername")).sendKeys("rahul");
+driver.findElement(By.cssSelector("input[type*='pass']")).sendKeys("rahulshettyacademy");
+driver.findElement(By.id("chkboxOne")).click();
+driver.findElement(By.xpath("//button[contains(@class,'submit')]")).click();
+
+3] Sibling to Sibling traversing
+
+html ==>
+	<header class="jumbotron text-center header_style" style="" xpath="1">
+  	    <a href="https://www.rahulshettyacademy.com/"><img src="images/rs_logo.png" class="logoClass"></a>
+	   <a href="https://rahulshettyacademy.com/documents-request" class="blinkingText">Free Access to 				 			InterviewQues/ResumeAssistance/Material</a>
+      		<div style="text-align: right;margin-top: -30px;">
+          		<a href="https://www.rahulshettyacademy.com/"><button class="btn btn-primary">Home</button></a>
+          		<button class="btn btn-primary">Practice</button>	
+          		<button class="btn btn-primary">Login</button>
+          		<button class="btn btn-primary">Signup</button>
+      		</div>
+	</header>
+	
+Xpath reach Login button from Practice button :
+	Xpath =>  //header/div/button[1]/following-sibling::button[1]
+
+4] Child to Parent navigation, navigating from Practice child button to div parent tag
+	Xpath =>  //header/div/button[1]/parent::div	
+
+
+
+
+5] Explicit Wait ( applied only for targeted WebElement )
+
+		WebDriver driver = new FirefoxDriver();
+		WebDriverWait w = new WebDriverWait(driver,Duration.ofSeconds(5));
+		w.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//button[text()='PROCEED TO CHECKOUT']")));
+		driver.findElement(By.xpath("//button[text()='PROCEED TO CHECKOUT']")).click();
+
+6] Implicit wait ( applied to global/all weblements )
+		WebDriver driver = new FirefoxDriver();		
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2));
+
+
+FluentWait will poll for given frequency duration
+
+7] Static Select Class for dropdown option/value selection
+
+			WebElement staticDropdown= driver.findElement(By.id("ctl00_mainContent_DropDownListCurrency"));
+			Select dropdown = new Select(staticDropdown);
+			dropdown.selectByIndex(3);
+			System.out.println(dropdown.getFirstSelectedOption().getText());
+			
+			dropdown.selectByVisibleText("AED");
+			System.out.println(dropdown.getFirstSelectedOption().getText());
+				
+			dropdown.selectByValue("INR");
+			System.out.println(dropdown.getFirstSelectedOption().getText());
+
+8] Alert window option switch
+
+		driver.findElement(By.cssSelector("#alertbtn")).click();
+		System.out.println(driver.switchTo().alert().getText());
+		driver.switchTo().alert().accept();
+
+9] Convert String Array to List 
+
+		String[] vegNeeded = { "cucumber", "mushroom", "Musk Melon" };
+		List<String> vegList = Arrays.asList(vegNeeded);
+
+
+10] Action Class for Mouse actions
+			import org.openqa.selenium.interactions.Actions;
+			
+			WebDriver driver = new FirefoxDriver();
+			WebElement target = driver.findElement(By.xpath("//*[@id='nav-link-accountList']"));
+			Actions act = new Actions(driver);
+			act.moveToElement(target).build().perform();
+
+			//move to search bar ,type in capital letters and then search 
+			WebElement searchBox = driver.findElement(By.cssSelector("input#twotabsearchtextbox"));
+			act.moveToElement(searchBox).click().keyDown(Keys.SHIFT).sendKeys("moto").build().perform();
+			
+			//double clicking on the webelment
+			act.moveToElement(searchBox).click().keyDown(Keys.SHIFT).sendKeys("moto").doubleClick().build().perform();
+
+			// right click
+			act.moveToElement(searchBox).contextClick().build().perform();
+
+
+
+
+11] Handling multiple windows
+
+		Set<String> subWindows = driver.getWindowHandles();
+		System.out.println(subWindows);
+		
+		Iterator<String> itr = subWindows.iterator();
+		String parentWindowID =itr.next();
+		String childWindowID= itr.next();
+		
+		driver.switchTo().window(childWindowID);
+
+		driver.switchTo().window(parentWindowID);
+
+12] Handling Frames : switch to child frame and come to original frame
+
+		WebElement frameName=  driver.findElement(By.cssSelector("iframe.demo-frame"));
+		driver.switchTo().frame(frameName);
+		
+		WebElement startPoint = driver.findElement(By.id("draggable"));
+		WebElement endPoint = driver.findElement(By.id("droppable"));
+		
+		
+		Actions act = new Actions(driver);
+		act.dragAndDrop(startPoint, endPoint).build().perform();
+		//come back to the main/original frame 
+		driver.switchTo().defaultContent();	
+
+13] To right click on the link on the page so that new page open new tab instead on new window
+
+			String clickOnTab= Keys.chord(Keys.CONTROL,Keys.ENTER);
+			footerColumn.findElements(By.tagName("a")).get(i).sendKeys(clickOnTab);
+
+14] Iterating using hasnext() and next() methods of iterator
+
+		Set<String> abc=driver.getWindowHandles();//4
+		Iterator<String> it=abc.iterator();
+		
+		while(it.hasNext())
+		{
+			
+		   driver.switchTo().window(it.next());
+		   System.out.println(driver.getTitle());
+		
+		}
+
+
+15] Scrolling on the webpage using JavaScript
+		a) On browser > Inspect >Console execute the below command
+			
+			JS CMD #1 = window.scrollBy(0,500)
+			JS CMD #2 = document.querySelector(".tableFixHead").scrollTop=600
+
+		b)Scrolling using selenium commands
+
+			JavascriptExecutor js = (JavascriptExecutor) driver;
+			//Scrolling the webpage
+			js.executeScript("window.scrollBy(0,500)");
+	
+			Thread.sleep(2000);
+	
+			//Scrolling on the webelement or table on the webpage. "tableFixHead" is the table locator on the webpage
+			js.executeScript("document.querySelector('.tableFixHead').scrollTop=600");
+
+16] Browser capabilities modifications : https://developer.chrome.com/docs/chromedriver/capabilities
+
+		a) Bypass website SSL privacy certificate warning
+
+			import org.openqa.selenium.chrome.ChromeOptions;
+
+			ChromeOptions options = new ChromeOptions();
+			options.setAcceptInsecureCerts(true);
+			WebDriver driver = new ChromeDriver(options); 
+
+			FirefoxOptions options1 = new FirefoxOptions();
+			options1.setAcceptInsecureCerts(true);
+			WebDriver driver = new FirefoxDriver(options1); 
+
+
+		b) Adding extensions to the browser
+
+			ChromeOptions options = new ChromeOptions();
+			options.addExtensions("path of extension");
+			WebDriver driver = new ChromeDriver(options); 
+
+
+		c) Adding Proxies
+
+			ChromeOptions options = new ChromeOptions();
+			Proxy proxy = new Proxy();
+			proxy.setHttpProxy("ipaddress:4444");
+			options.setCapability("proxy", proxy);
+			WebDriver driver = new ChromeDriver(options);
+
+		d) Blocking all pop-ups when the browser is launched
+		
+			ChromeOptions options = new ChromeOptions();
+			options.setExperimentalOption("excludeSwitches", Arrays.asList("disable-popup-blocking"));
+			WebDriver driver = new ChromeDriver(options); 
+
+
+		e) Start Chrome maximized
+			ChromeOptions options = new ChromeOptions();
+			options.addArguments("start-maximized");
+			WebDriver driver = new ChromeDriver(options); 
+
+
+		f) Miscellanios browser actions
+		WebDriver driver = new ChromeDriver();	
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2));
+		driver.manage().window().maximize();
+		driver.manage().deleteAllCookies();
+//		driver.manage().deleteCookie(null);
+//		driver.manage().addCookie(null);	
+		driver.get(url);
+
+
+17] Taking screenshot
+
+		a) Of entire webpage
+		import org.apache.commons.io.FileUtils;
+		import org.openqa.selenium.OutputType;
+		import org.openqa.selenium.TakesScreenshot;
+
+		File src = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+		FileUtils.copyFile(src,new File("D://screenshot.png"));
+
+		b) of webelement only
+
+		String courseName = "Java course";
+		WebElement courseId = driver.findElement(By.xpath("//input[@name='name']"));
+		courseId.sendKeys(courseName);
+		File f =courseId.getScreenshotAs(OutputType.FILE);
+		FileUtils.copyFile(f, new File("D:\\selenium\\MyWorkspace\\Intro\\sample.png"));
+
+	
+18] Check the response code of the url without actually opening the webpage
+
+	import java.io.IOException;
+	import java.net.HttpURLConnection;
+	import java.net.MalformedURLException;
+	import java.net.URL;
+
+
+	public static Integer connStatus(String testUrl) throws MalformedURLException, IOException {
+		HttpURLConnection conn = (HttpURLConnection)new URL(testUrl).openConnection();
+		conn.setRequestMethod("HEAD");
+		conn.connect();
+		return (conn.getResponseCode());
+		
+	}
+	
+
+
+19] Soft Assertions
+			import org.testng.asserts.SoftAssert;
+
+			SoftAssert sa = new SoftAssert();
+			sa.assertTrue(Condition, TextMessage);
+			sa.assertAll();	
+
+
+		# actual code
+		SoftAssert softAssert = new SoftAssert();	
+		List<WebElement> footer = driver.findElements(By.cssSelector("li.gf-li a"));	
+		for (WebElement link : footer) {
+			String footerLink = link.getText();
+			String testUrl = link.getAttribute("href");
+			Integer RecStatus = connStatus(testUrl);	
+			String goodBad = "Good";
+			System.out.println(RecStatus);
+			softAssert.assertTrue(RecStatus<400, footerLink + " : "+testUrl+ " : "+ RecStatus);
+		}
+		softAssert.assertAll();	
+
+
+20] Streams for filtering and aggregating list 
+
+		 ArrayList<String> names = new ArrayList<String>();
+		 names.add("Plain");
+		 names.add("Java");
+		 names.add("session");
+		 names.add("JRE");
+
+
+		a) To count number of elements in an array
+			long value = names.stream().count();
+			System.out.println("Total no. of names using stream ="+value);
+		
+		b) to get first element of an array
+			Optional<String> os = names.stream().findFirst();
+			System.out.println("First element = "+os.get());
+
+		c) To filter and count number of names starting with J char
+			long countName  =names.stream().filter(name -> name.startsWith("J")).count();
+			System.out.println("Count of names starting with J = "+countName);
+
+		d) To print all elements of an array whose length is grater than 3
+			names.stream().filter(name->name.length()>3).forEach(name -> System.out.println(name));
+		
+		e) Creating a list of string 
+			Stream.of("Plain", "Java", "session", "JRE")
+
+		f) use map function to manipulate the filtered result of a stream
+
+			Stream.of("Plain", "Java", "session", "JRE")
+			.filter(name -> name.endsWith("a"))
+			.map(name->name.toUpperCase())
+			.forEach(name -> System.out.println(name));
+
+
+		g) Sorting names 
+			Stream.of("Plain", "Java", "session", "JRE","banana","goa")
+			.map(name -> name.toLowerCase())
+			.sorted()
+			.map(name->name.toUpperCase())
+			.forEach(name -> System.out.println(name));
+
+		h) To concant two string arrays
+
+			List<String> arr1 = Arrays.asList("a","b","l","m");
+			List<String> arr2 = Arrays.asList("j","k","c","d");
+			Stream<String>arr = Stream.concat(arr1.stream(), arr2.stream());
+			arr.sorted().forEach(name -> System.out.println(name));
+		I) convert Streams to list array		
+		//converting stream to list using collector class
+		List<String> newStream = Stream.of("Plain", "Java", "session", "JRE","banana","goa")
+		.map(name -> name.toLowerCase())
+		.sorted()
+		.map(name->name.toUpperCase())
+		.collect(Collectors.toList());
+
+		j) print unique numbers
+			
+			System.out.println("Print unique numbers");
+			List<Integer> nums=	Arrays.asList(1,3,5,7,8,5,4,8,23,3);
+			nums.stream().distinct()
+			.sorted()
+			.forEach(n -> System.out.println(n));
+	
+
+21] To convert Arrays in array list
+
+		List<String> names = Arrays.asList(("Plain", "Java", "session", "JRE","banana","goa"));
+
+
+22]Relative locator available only in selenium 4.0 onwards
+
+	a) finding a webelement above another weblement
+		WebElement emailBox= driver.findElement(By.cssSelector("input[name='email']"));
+		System.out.println(driver.findElement(RelativeLocator.with(By.tagName("label")).above(emailBox)).getText());	
+
+	b) finding a webelement below another weblement
+		WebElement doB = driver.findElement(By.cssSelector("label[for='dateofBirth']"));
+		System.out.println(doB.getText());
+		driver.findElement(RelativeLocator.with(By.tagName("input")).below(doB)).click();
+
+	c) Left of a webelement
+		WebElement formCheck = driver.findElement(By.cssSelector("label[for='exampleCheck1']"));
+		driver.findElement(RelativeLocator.with(By.tagName("input")).toLeftOf(formCheck)).click();
+
+
+	d)right of webelement
+			String labelName = driver.findElement(RelativeLocator.with(By.tagName("label"))
+				.toRightOf(driver.findElement(By.cssSelector("#inlineRadio1")))).getText();
+			System.out.println(labelName);
+		
+
+23] Open a new window tab from current window
+		a) open a new tab
+		
+		driver.switchTo().newWindow(WindowType.TAB); //this will open new window tab
+		Set<String>windows=driver.getWindowHandles();
+		Iterator<String> itr=windows.iterator();
+		String parentID= itr.next();
+		String childID = itr.next();
+		driver.switchTo().window(childID); // this will switch to new opened window tab
+		driver.get(newUrl);  // this will load website in new window tab
+	
+		b) Open a new window
+			driver.switchTo().newWindow(WindowType.WINDOW);
+
+24] Get height and width of the element
+		
+		WebElement courseId = driver.findElement(By.xpath("//input[@name='name']"));
+		System.out.println("Height ="+courseId.getRect().getDimension().getHeight());
+		System.out.println("Width ="+courseId.getRect().getDimension().getWidth());
+
+
+25] Launch Chrome web browser automatically without setting system property
+
+		a) pom.xml dependency
+			<!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
+				<dependency>
+    					<groupId>io.github.bonigarcia</groupId>
+    					<artifactId>webdrivermanager</artifactId>
+    					<version>5.8.0</version>
+				</dependency>
+		b) In java code
+			import org.openqa.selenium.WebDriver;
+			import org.openqa.selenium.chrome.ChromeDriver;
+
+
+			WebDriverManager.chromedriver().setup();
+			WebDriver driver = new ChromeDriver();
+
